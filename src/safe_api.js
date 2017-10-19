@@ -10,24 +10,19 @@ const {
 
 // Unique TYPE_TAG for refering the MutableData. Number can be anything above the reserved rage (0-15000)
 const TYPE_TAG = 15001;
-// Contant vaalue used for holding the key and value used for setting the user as admin in app's own container
-// const IS_ADMIN = {
-//   key: 'isAdmin',
-//   value: 'true',
-// };
 // Constant value for the `.` Delimitter
 const DOT = '.';
 
-let name = window.location.hostname;
-if (name.split(DOT).length === 1) {
-  name = `www.${name}`;
+let hostName = window.location.hostname;
+if (hostName.split(DOT).length === 1) {
+  hostName = `www.${hostName}`;
 }
 
 // Authorisation model
 const APP = {
   info: {
-    id: `${name}-comment-plugin`,
-    name: `${name}-comment-plugin`,
+    id: `${hostName}-comment-plugin`,
+    name: `${hostName}-comment-plugin`,
     vendor: 'MaidSafe.net',
   },
   opts: {},
@@ -38,7 +33,6 @@ const APP = {
 
 /**
  * SafeApi handles the SAFE Network related requests for managing the comments for a topic.
- * Topic is a key that will be used to save the comments.
  * Exposes function for the store/UI to save/retrieve comment list against a topic.
  * Also exposes other utility functions for getting Public ID list and also to validate the user is admin
  */
@@ -54,15 +48,14 @@ export default class SafeApi {
     this.comments = [];
     this.app = undefined;
     this.mData = undefined;
-    this.MD_NAME = `${name}-${this.topic}`;
+    this.MD_NAME = `${hostName}-${this.topic}`;
     this.nwStateCb = (newState) => {
-      console.log('Network state changed to: ', newState);
       nwStateCb(newState);
     };
   }
 
   /**
-  * Fetches the public Ids associated for the user.
+  * Fetches the public Ids associated to the user.
   */
   getPublicNames() {
     return new Promise(async (resolve, reject) => {
@@ -105,8 +98,8 @@ export default class SafeApi {
   }
 
   /**
-  * Set up the MutableData with Insert & Update permission for Everyone.
-  * Create a Public Mutable Data with a deterministic name. (Hash(location.hostname))
+  * Set up the MutableData with Insert permission for Everyone.
+  * Create a Public Mutable Data with a deterministic name. (Hash(location.hostname + topic))
   * Apply the permission set for the MutableData
   */
   setup() {
@@ -131,7 +124,7 @@ export default class SafeApi {
         const permSet = await window.safeMutableData.newPermissionSet(this.app);
         // allowing the user to perform the Insert operation
         await window.safeMutableDataPermissionsSet.setAllow(permSet, PERMISSIONS.INSERT);
-        // setting the handle as null, anyone can perform the Insert/Update operation
+        // setting the handle as null, anyone can perform the Insert operation
         await window.safeMutableData.setUserPermissions(this.mData, null, permSet, 1);
         resolve();
       } catch (err) {
@@ -141,7 +134,7 @@ export default class SafeApi {
   }
 
   /**
-  * Create the MutableData by computing the name deterministically based on location.hostname
+  * Create the MutableData for the MD_NAME
   */
   createMutableDataHandle() {
     return new Promise(async (resolve, reject) => {
@@ -153,6 +146,7 @@ export default class SafeApi {
         await window.safeApp.connectAuthorised(this.app, uri);
         // Compute the MutableData name
         const hashedName = await window.safeCrypto.sha3Hash(this.app, this.MD_NAME);
+        // Create the handle for the MutableData
         this.mData = await window.safeMutableData.newPublic(this.app, hashedName, TYPE_TAG);
         resolve();
       } catch (err) {
@@ -199,7 +193,7 @@ export default class SafeApi {
       try {
         const isInitialised = await this.isMDInitialised();
         if (!isInitialised) {
-          // Set the user as Admin
+          // Create the MutableData if the current user is the owner 
           await this.setup();
         } else {
           await this.createMutableDataHandle();
@@ -239,6 +233,7 @@ export default class SafeApi {
         const mutationHandle = await window.safeMutableDataEntries.mutate(entriesHandle);
         updatedList.unshift(commentModel);
         await window.safeMutableDataMutation.insert(mutationHandle, commentModel.id, JSON.stringify(commentModel));
+        // Without calling applyEntriesMutation the changes wont we saved in the network
         await window.safeMutableData.applyEntriesMutation(this.mData, mutationHandle);
         window.safeMutableDataMutation.free(mutationHandle);
         window.safeMutableDataEntries.free(entriesHandle);

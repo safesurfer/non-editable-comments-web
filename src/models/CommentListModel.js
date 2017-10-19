@@ -22,7 +22,6 @@ export default class CommentListModel {
   @observable isNwConnecting = false;
 
   sortComments(comments) {
-    console.log('before', comments)
     comments.sort((a, b) => {
       const date1 = new Date(a.date);
       const date2 = new Date(b.date);
@@ -30,7 +29,6 @@ export default class CommentListModel {
       if (date1 < date2) return 1;
       return 0;
     });
-    console.log('after', comments)
     return comments;
   }
 

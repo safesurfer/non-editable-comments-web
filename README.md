@@ -6,7 +6,8 @@ Simple javascript plugin built using React and Mobx for enabling disqus like com
 
 1. Clone the project
     ```bash
-    $ git clone https://github.com/<>.git
+    $ git clone https://github.com/maidsafe/safe_examples
+    $ cd safe_examples/non-editable-comments-web
     ```
 
 2. Install the Node.js dependencies.
@@ -19,6 +20,12 @@ Simple javascript plugin built using React and Mobx for enabling disqus like com
 
 ## Integrating the plugin to your page
 
+Two simple steps for integrating the plugin:
+
+- Include the script in your html and initialise the plugin
+- Visit the page to enable comments for that page.
+
+### Initialising the plugin
 Build and refer the `comments.js` file in your html page.
 
 Initialise the plugin after the DOM is ready by passing a `topic` and `targetId` as parameters.
@@ -53,3 +60,13 @@ Example snippet:
 	</div>
 </html>
 ```
+
+After publishing the page, admin must visit the page to enable comments for the page.
+
+## Simple tasks as exercise
+
+Trying to add minor features to the plugin can be a good place to get started. Few simple tasks can be,
+
+- Adding a refresh button to the list.
+- Handling the network connection state. Right now it is left unhanlded. The event must be
+propageted to the UI and provide a reconnect function. Find out the [API](http://docs.maidsafe.net/beaker-plugin-safe-app) for reconnecting on connection lost :smile:
